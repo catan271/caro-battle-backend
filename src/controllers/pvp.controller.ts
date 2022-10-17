@@ -26,36 +26,28 @@ class PvpSocketController {
         return null;
     }
 
-    joinRoom(io: Namespace, socket: Socket, data: JoinRoomDto, callback: SocketEventCallback) {
+    joinRoomRandom(io: Namespace, socket: Socket, data: JoinRoomDto, callback: SocketEventCallback) {
         let currentRoom: Room;
         let role: 'x' | 'o';
-        let room: number;
+        let room = 1000;
 
-        if (data.room) {
-            room = data.room;
-
-            role = this.checkRoom(room);
-            if (!role) {
-                throw new Error('Cannot join this room');
-            }
-
+        // find waiting room
+        while (this.rooms[room]) {
             currentRoom = this.rooms[room];
-        } else {
-            room = 999;
-            // find waiting room
-            while (this.rooms[room]) {
-                room++;
+            if (currentRoom.game.status !== 'waiting') {
                 role = this.checkRoom(room);
-                if (!role) continue;
-
-                currentRoom = this.rooms[room];
+                if (role) break;
             }
+            room++;
+        }
 
-            // create room if there is no waiting room
+        // create room if there is no waiting room
+        if (!this.rooms[room]) {
             this.rooms[room] = {
                 game: new GameController(),
             };
             currentRoom = this.rooms[room];
+            role = 'x';
         }
 
         // set play of current room
@@ -68,7 +60,69 @@ class PvpSocketController {
         // socket join and callback
         socket.join(String(room));
         callback(null, {
-            room: data.room,
+            room,
+            role,
+            status: currentRoom.game.status,
+            map: currentRoom.game.map,
+        });
+
+        // start game if both x and o are present
+        if (currentRoom.x && currentRoom.o) {
+            currentRoom.game.start();
+
+            io.to(String(room)).emit('x-turn', {
+                room: data.room,
+                status: currentRoom.game.status,
+                map: currentRoom.game.map,
+            });
+        }
+    }
+
+    createRoom(io: Namespace, socket: Socket, data: JoinRoomDto, callback: SocketEventCallback) {
+        let room = 1000;
+        while (this.rooms[room]) {
+            room++;
+        }
+
+        // create room
+        this.rooms[room] = {
+            game: new GameController(),
+        };
+        const currentRoom = this.rooms[room];
+        const role = 'x';
+        currentRoom.game.status = 'waiting-lock';
+
+        // set play of current room
+        currentRoom[role] = {
+            socketId: socket.id,
+            name: data.name,
+            role,
+        };
+
+        // socket join and callback
+        socket.join(String(room));
+        callback(null, {
+            room,
+            role,
+            status: currentRoom.game.status,
+            map: currentRoom.game.map,
+        });
+    }
+
+    joinRoom(io: Namespace, socket: Socket, data: JoinRoomDto, callback: SocketEventCallback) {
+        const room = data.room;
+        const role = this.checkRoom(room);
+
+        if (!role) {
+            throw new Error('Cannot join this room');
+        }
+
+        const currentRoom = this.rooms[room];
+
+        // socket join and callback
+        socket.join(String(room));
+        callback(null, {
+            room,
             role,
             status: currentRoom.game.status,
             map: currentRoom.game.map,

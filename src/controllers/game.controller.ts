@@ -1,7 +1,7 @@
 export class GameController {
     map: Array<Array<string>>;
     turn: 'x' | 'o';
-    status: 'waiting' | 'in-game' | 'endgame';
+    status: 'waiting' | 'waiting-lock' | 'in-game' | 'endgame';
 
     constructor() {
         this.map = [...Array(15)].map(() => {
