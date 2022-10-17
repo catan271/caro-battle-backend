@@ -6,6 +6,7 @@ import { GameController } from './game.controller';
 
 class PvpSocketController {
     rooms: Record<number, Room>;
+
     constructor() {
         this.rooms = {};
     }
@@ -14,15 +15,12 @@ class PvpSocketController {
         if (!this.rooms[room]) {
             return null;
         }
-
         if (!this.rooms[room].x) {
             return 'x';
         }
-
         if (!this.rooms[room].o) {
             return 'o';
         }
-
         return null;
     }
 
@@ -34,7 +32,7 @@ class PvpSocketController {
         // find waiting room
         while (this.rooms[room]) {
             currentRoom = this.rooms[room];
-            if (currentRoom.game.status !== 'waiting') {
+            if (currentRoom.game.status === 'waiting') {
                 role = this.checkRoom(room);
                 if (role) break;
             }
@@ -50,7 +48,7 @@ class PvpSocketController {
             role = 'x';
         }
 
-        // set play of current room
+        // set player of current room
         currentRoom[role] = {
             socketId: socket.id,
             name: data.name,
@@ -92,7 +90,7 @@ class PvpSocketController {
         const role = 'x';
         currentRoom.game.status = 'waiting-lock';
 
-        // set play of current room
+        // set player of current room
         currentRoom[role] = {
             socketId: socket.id,
             name: data.name,
@@ -119,6 +117,13 @@ class PvpSocketController {
 
         const currentRoom = this.rooms[room];
 
+        // set player of current room
+        currentRoom[role] = {
+            socketId: socket.id,
+            name: data.name,
+            role,
+        };
+
         // socket join and callback
         socket.join(String(room));
         callback(null, {
@@ -137,6 +142,52 @@ class PvpSocketController {
                 status: currentRoom.game.status,
                 map: currentRoom.game.map,
             });
+        }
+    }
+
+    spectate(io: Namespace, socket: Socket, data: JoinRoomDto, callback: SocketEventCallback) {
+        if (!data.room) {
+            throw new Error('Room must be provided');
+        }
+
+        const { room } = data;
+        let currentRoom: Room;
+        if (this.rooms[room]) {
+            currentRoom = this.rooms[room];
+        } else {
+            this.rooms[room] = {
+                game: new GameController(),
+            };
+        }
+
+        // socket join and callback
+        socket.join(String(room));
+        callback(null, {
+            room,
+            role: 'spectator',
+            status: currentRoom.game.status,
+            map: currentRoom.game.map,
+        });
+    }
+
+    leave(io: Namespace, socket: Socket) {
+        for (const room in this.rooms) {
+            // delete player
+            if (this.rooms[room].x?.socketId === socket.id) {
+                delete this.rooms[room]?.x;
+            }
+
+            // delete player
+            if (this.rooms[room].o?.socketId === socket.id) {
+                delete this.rooms[room]?.o;
+            }
+
+            this.rooms[room].game.status = 'waiting-lock';
+
+            // delete room if there no one left in room
+            if (!io.adapter.rooms.get(room)?.size) {
+                delete this.rooms[room];
+            }
         }
     }
 }

@@ -33,4 +33,22 @@ export const pvpSocketHandler = (io: Namespace) => (socket: Socket) => {
             });
         }
     });
+
+    socket.on('spectate', (data: JoinRoomDto, callback: SocketEventCallback) => {
+        try {
+            pvpSocketController.spectate(io, socket, data, callback);
+        } catch (err) {
+            callback({
+                message: err.message,
+            });
+        }
+    });
+
+    socket.on('disconnect', () => {
+        try {
+            pvpSocketController.leave(io, socket);
+        } catch (err) {
+            console.error(err);
+        }
+    });
 };
