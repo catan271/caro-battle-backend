@@ -5,7 +5,7 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
+    "start": "env NODE_PATH=dist/ node dist/index.js",
     "start:dev": "nodemon",
     "lint": "eslint --fix \"{src,apps,libs,test}/**/*.ts\""
   },
