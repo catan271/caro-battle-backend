@@ -1,5 +1,5 @@
 import { Namespace, Socket } from 'socket.io';
-import { MoveDto } from 'src/dto/move.dto';
+import { MoveDto } from '../dto/move.dto';
 import { PvpSocketController } from '../controllers/pvp.controller';
 import { JoinRoomDto } from '../dto/join-room.dto';
 import { SocketEventCallback } from '../types/socket-event-callback.type';

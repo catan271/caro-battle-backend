@@ -1,6 +1,6 @@
 import { Namespace, Socket } from 'socket.io';
-import { MoveDto } from 'src/dto/move.dto';
-import { getRoomData, getTurnData } from 'src/utils/room-data.util';
+import { MoveDto } from '../dto/move.dto';
+import { getRoomData, getTurnData } from '../utils/room-data.util';
 import { JoinRoomDto } from '../dto/join-room.dto';
 import { Room } from '../types/room.interface';
 import { SocketEventCallback } from '../types/socket-event-callback.type';
@@ -158,6 +158,11 @@ export class PvpSocketController {
                 row,
             }),
         );
+
+        const endgame = room.game.checkWinner(player, row, col);
+        if (endgame) {
+            this.io.to(String(data.room)).emit('endgame', endgame);
+        }
     }
 
     spectate(data: JoinRoomDto, callback: SocketEventCallback) {
@@ -166,38 +171,44 @@ export class PvpSocketController {
         }
 
         const { room } = data;
-        let currentRoom: Room;
-        if (this.Class.rooms[room]) {
-            currentRoom = this.Class.rooms[room];
-        } else {
+        if (!this.Class.rooms[room]) {
             this.Class.rooms[room] = {
                 game: new GameController(),
             };
+            this.Class.rooms[room].game.status = 'waiting-lock';
         }
+        const currentRoom = this.Class.rooms[room];
 
         // socket join and callback
         this.socket.join(String(room));
-        callback(null, getRoomData(currentRoom));
+        this.io.to(String(room)).emit('player_join', getRoomData(currentRoom));
+        callback(null, {
+            room,
+            you: 'spectator',
+        });
     }
 
     leave() {
         for (const room in this.Class.rooms) {
+            const currentRoom = this.Class.rooms[room];
             // delete player
-            if (this.Class.rooms[room].x?.socketId === this.socket.id) {
-                delete this.Class.rooms[room]?.x;
+            if (currentRoom.x?.socketId === this.socket.id) {
+                delete currentRoom.x;
             }
 
             // delete player
-            if (this.Class.rooms[room].o?.socketId === this.socket.id) {
-                delete this.Class.rooms[room]?.o;
+            if (currentRoom.o?.socketId === this.socket.id) {
+                delete currentRoom.o;
             }
 
-            this.Class.rooms[room].game.status = 'waiting-lock';
+            currentRoom.game.status = 'waiting-lock';
 
             // delete room if there no one left in room
             if (!this.io.adapter.rooms.get(room)?.size) {
                 delete this.Class.rooms[room];
             }
+
+            this.io.to(room).emit('player_leave', getRoomData(currentRoom));
         }
     }
 }

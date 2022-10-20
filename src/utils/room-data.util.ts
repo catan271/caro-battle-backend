@@ -1,4 +1,4 @@
-import { Room } from 'src/types/room.interface';
+import { Room } from '../types/room.interface';
 
 export const getRoomData = (room: Room) => {
     const res: any = {
