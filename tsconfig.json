@@ -13,9 +13,10 @@
       "emitDecoratorMetadata": true,
       "experimentalDecorators": true,
       "skipLibCheck": true,
-      "baseUrl": ".",
+      "baseUrl": "./src",
       "outDir": "./dist",
       "types": [
+        "@types/node"
       ]
     },
     "include": [
