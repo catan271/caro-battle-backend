@@ -6,3 +6,7 @@ export const getAppInfo = async (req: Request, res: Response) => {
         author: 'Catan',
     });
 };
+
+export const getView = (req: Request, res: Response) => {
+    return res.render('index');
+};
