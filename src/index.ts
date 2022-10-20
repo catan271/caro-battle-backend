@@ -1,7 +1,7 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { app } from './app';
-import { pvpSocketHandler } from '.socket/pvp.handler';
+import { pvpSocketHandler } from './socket/pvp.handler';
 
 process.on('uncaughtException', (err: Error) => {
     console.error(err);
