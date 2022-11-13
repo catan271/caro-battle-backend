@@ -1,19 +1,37 @@
-export class GameController {
-    map: Array<Array<string>>;
-    turn: 'x' | 'o';
-    status: 'waiting' | 'waiting-lock' | 'in-game' | 'endgame';
+import { EndgameDto } from '../dto/endgame.dto';
+import { EndgameCallback } from '../types/endgame-callback.types';
+import { Role } from '../types/role.type';
 
-    constructor() {
+export class GameController {
+    map: Array<Array<Role>>;
+    turn: Role;
+    status: 'waiting' | 'waiting-lock' | 'in-game' | 'endgame';
+    time: number;
+    countdown: NodeJS.Timeout;
+    endgame: EndgameCallback;
+
+    constructor(time: number, endgame: EndgameCallback) {
         this.map = [...Array(15)].map(() => {
             return [...Array(15)].map(() => null);
         });
         this.turn = undefined;
         this.status = 'waiting';
+        this.time = time;
+        this.endgame = endgame;
     }
 
     start() {
         this.status = 'in-game';
         this.turn = this.turn || 'x';
+        if (this.time) {
+            this.countdown = setTimeout(() => {
+                const winner = this.turn === 'x' ? 'o' : 'x';
+                this.triggerEndgame({
+                    winner,
+                    winPattern: [],
+                });
+            }, this.time * 1000);
+        }
     }
 
     getCell(r: number, c: number) {
@@ -21,7 +39,7 @@ export class GameController {
         return row[c];
     }
 
-    checkWinner(player: 'x' | 'o', r: number, c: number) {
+    checkWinner(player: Role, r: number, c: number) {
         const directions = [
             [-1, -1],
             [-1, 0],
@@ -46,19 +64,15 @@ export class GameController {
                 winPattern.push(row + '-' + col);
             }
             if (winPattern.length >= 5) {
-                this.turn = undefined;
-                this.status = 'endgame';
-                return {
+                return this.triggerEndgame({
                     winner: player,
                     winPattern,
-                };
+                });
             }
         }
-
-        return false;
     }
 
-    move(player: 'x' | 'o', row: number, col: number) {
+    move(player: Role, row: number, col: number) {
         if (this.turn !== player || this.status !== 'in-game') {
             throw new Error('Invalid turn');
         }
@@ -69,6 +83,25 @@ export class GameController {
 
         this.map[row][col] = player;
 
+        // change turn, reset countdown
         this.turn = player === 'x' ? 'o' : 'x';
+        if (this.time) {
+            clearTimeout(this.countdown);
+            this.countdown = setTimeout(() => {
+                this.triggerEndgame({
+                    winner: player,
+                    winPattern: [],
+                });
+            }, this.time * 1000);
+        }
+        this.checkWinner(player, row, col);
+    }
+
+    triggerEndgame(data: EndgameDto) {
+        if (this.status === 'endgame') return;
+        this.turn = undefined;
+        this.status = 'endgame';
+        clearTimeout(this.countdown);
+        return this.endgame(data);
     }
 }

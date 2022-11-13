@@ -5,6 +5,7 @@ export const getRoomData = (room: Room) => {
         status: room.game?.status,
         map: room.game?.map,
         turn: room.game?.turn,
+        time: room.game.time,
     };
     if (room.x) {
         res.x = {

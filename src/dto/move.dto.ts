@@ -1,6 +1,8 @@
+import { Role } from '../types/role.type';
+
 export interface MoveDto {
     room: number;
-    player: 'x' | 'o';
+    player: Role;
     row: number;
     col: number;
 }

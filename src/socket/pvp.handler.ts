@@ -4,9 +4,7 @@ import { PvpSocketController } from '../controllers/pvp.controller';
 import { JoinRoomDto } from '../dto/join-room.dto';
 import { SocketEventCallback } from '../types/socket-event-callback.type';
 
-let count = 1;
 export const pvpSocketHandler = (io: Namespace) => (socket: Socket) => {
-    console.log(count++);
     const controller = new PvpSocketController(io, socket);
 
     socket.on('join_random', (data: JoinRoomDto, callback: SocketEventCallback) => {
