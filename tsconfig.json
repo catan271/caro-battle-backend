@@ -1,5 +1,5 @@
 {
-    "compilerOptions": {
+  "compilerOptions": {
       "target": "es2016",
       "module": "commonjs",
       "moduleResolution": "node",
@@ -25,4 +25,4 @@
     "ts-node": {
       "require": ["tsconfig-paths/register"]
     }
-  }
+}
