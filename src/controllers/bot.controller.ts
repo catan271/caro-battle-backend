@@ -2,7 +2,7 @@ import { Role } from "types/role.type";
 
 export class BotController {
     static WIN_SCORE = 100000000;
-    static WIN_GUARANTEE = 100000;
+    static WIN_GUARANTEE = 1000000;
 
     static getPlayer(bot: Role) {
         return bot === 'x' ? 'o' : 'x';
