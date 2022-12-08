@@ -8,6 +8,7 @@ import { SocketEventCallback } from '../types/socket-event-callback.type';
 import { getRoomData, getTurnData } from '../utils/room-data.util';
 import { BotController } from './bot.controller';
 import { GameController } from './game.controller';
+import { cloneDeep } from 'lodash';
 
 export class PveSocketController {
     Class = PveSocketController;
@@ -87,7 +88,8 @@ export class PveSocketController {
 
         if (room.game.status !== 'endgame') {
             const bot: Role = data.player === 'x' ? 'o' : 'x';
-            const nextMove = BotController.generateMove(room.game.map, bot);
+
+            const nextMove = BotController.generateMove(cloneDeep(room.game.map), bot);
             row = nextMove.row;
             col = nextMove.col;
             room.game.move(bot, row, col);

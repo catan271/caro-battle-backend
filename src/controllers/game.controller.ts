@@ -35,8 +35,7 @@ export class GameController {
     }
 
     getCell(r: number, c: number) {
-        const row = this.map[r] || [];
-        return row[c];
+        return this.map[r]?.[c];
     }
 
     checkWinner(player: Role, r: number, c: number) {
@@ -53,14 +52,14 @@ export class GameController {
                 const row = r + i * direction[0];
                 const col = c + i * direction[1];
                 const cell = this.getCell(row, col);
-                if (!cell || cell != player) break;
+                if (cell != player) break;
                 winPattern.push(row + '-' + col);
             }
             for (let i = 1; i < 5; i++) {
                 const row = r - i * direction[0];
                 const col = c - i * direction[1];
                 const cell = this.getCell(row, col);
-                if (!cell || cell != player) break;
+                if (cell != player) break;
                 winPattern.push(row + '-' + col);
             }
             if (winPattern.length >= 5) {
