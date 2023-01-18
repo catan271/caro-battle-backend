@@ -3,7 +3,7 @@ import { LineEvaluation, Move, MoveEvaluation } from '../types/evaluation.interf
 import { Role } from '../types/role.type';
 
 export class BotController {
-    static WIN_SCORE = 100000000;
+    static WIN_SCORE = 1000000000;
     static LOSE_SCORE = -100000000;
     static WIN_GUARANTEE = 1000000;
 
@@ -96,6 +96,7 @@ export class BotController {
             }
         }
         return shuffle(moves);
+        // return moves;
     }
 
     static evaluateShape(count: number, openEnds: number, isMyTurn: boolean) {
@@ -104,10 +105,10 @@ export class BotController {
         }
         switch (count) {
             case 5:
-                return BotController.WIN_SCORE / (3 - openEnds);
+                return BotController.WIN_GUARANTEE * (openEnds + 6);
             case 4:
-                if (isMyTurn) return BotController.WIN_GUARANTEE;
-                else return openEnds == 2 ? BotController.WIN_GUARANTEE / 4 : 200;
+                if (isMyTurn) return BotController.WIN_GUARANTEE * 4;
+                else return openEnds == 2 ? BotController.WIN_GUARANTEE : 200;
             case 3:
                 if (isMyTurn) return openEnds == 2 ? 50_000 : 10;
                 else return openEnds == 2 ? 200 : 5;
@@ -117,7 +118,7 @@ export class BotController {
             case 1:
                 return 1;
             default:
-                return BotController.WIN_GUARANTEE * 2;
+                return BotController.WIN_GUARANTEE * 10;
         }
     }
     static evaluateLines(
@@ -209,7 +210,7 @@ export class BotController {
         const botScore = BotController.evaluateStateForRole(map, bot, isBotTurn);
         let playerScore = BotController.evaluateStateForRole(map, BotController.getPlayer(bot), !isBotTurn);
         if (playerScore == 0) {
-            playerScore = 1;
+            playerScore = 0.0001;
         }
         return botScore - playerScore;
     }
@@ -237,15 +238,11 @@ export class BotController {
 
             for (const move of allPossibleMoves) {
                 map[move.row][move.col] = bot;
-                if (BotController.checkWinner(map, move.row, move.col)) {
-                    // console.log('bot win');
-                    const grade = BotController.evaluateState(map, isMax, bot);
-                    map[move.row][move.col] = null;
 
-                    return { score: grade, move };
-                }
+                // const nextDepth = depth - 1;
+                const nextDepth = BotController.checkWinner(map, move.row, move.col) ? 0 : depth - 1;
 
-                const tmpMove = BotController.minimaxSearchAB(depth - 1, map, false, alpha, beta, bot);
+                const tmpMove = BotController.minimaxSearchAB(nextDepth, map, false, alpha, beta, bot);
                 map[move.row][move.col] = null;
 
                 if (tmpMove.score >= beta) {
@@ -264,15 +261,11 @@ export class BotController {
 
             for (const move of allPossibleMoves) {
                 map[move.row][move.col] = BotController.getPlayer(bot);
-                if (BotController.checkWinner(map, move.row, move.col)) {
-                    // console.log('bot lose');
-                    const grade = BotController.evaluateState(map, isMax, bot);
-                    map[move.row][move.col] = null;
 
-                    return { score: grade, move };
-                }
+                // const nextDepth = depth - 1;
+                const nextDepth = BotController.checkWinner(map, move.row, move.col) ? 0 : depth - 1;
 
-                const tmpMove = BotController.minimaxSearchAB(depth - 1, map, true, alpha, beta, bot);
+                const tmpMove = BotController.minimaxSearchAB(nextDepth, map, true, alpha, beta, bot);
                 map[move.row][move.col] = null;
 
                 if (tmpMove.score <= alpha) {
