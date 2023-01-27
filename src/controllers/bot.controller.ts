@@ -5,7 +5,7 @@ import { Role } from '../types/role.type';
 export class BotController {
     static WIN_SCORE = 1000000000;
     static LOSE_SCORE = -100000000;
-    static WIN_GUARANTEE = 1000000;
+    static WIN_GUARANTEE = 100_000;
 
     static getPlayer(bot: Role) {
         return bot === 'x' ? 'o' : 'x';
@@ -107,8 +107,8 @@ export class BotController {
             case 5:
                 return BotController.WIN_GUARANTEE * (openEnds + 6);
             case 4:
-                if (isMyTurn) return BotController.WIN_GUARANTEE * 4;
-                else return openEnds == 2 ? BotController.WIN_GUARANTEE : 200;
+                if (isMyTurn) return BotController.WIN_GUARANTEE * (2 + openEnds);
+                else return openEnds == 2 ? BotController.WIN_GUARANTEE : 40_000;
             case 3:
                 if (isMyTurn) return openEnds == 2 ? 50_000 : 10;
                 else return openEnds == 2 ? 200 : 5;
